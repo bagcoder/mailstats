@@ -1,0 +1,7 @@
+credentials.json
+token.json
+messages_cache.jsonl
+inbox_stats.xlsx
+.venv/
+__pycache__/
+.pytest_cache/
