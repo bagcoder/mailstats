@@ -29,6 +29,22 @@ Ctrl+C is safe: the cache is kept and the next run continues. Speed depends on b
 - Apps in Testing status get refresh tokens that expire after 7 days; the tool detects this and reruns the browser login.
 - `token.json` and `messages_cache.jsonl` are private (mode 0600) and git-ignored. The token grants read access to your mailbox: revoke it at https://myaccount.google.com/permissions when done.
 
+## Caveats and known limitations
+- **Slow on large mailboxes.** Gmail limits each user to 6,000 quota units per minute (see Quotas & System Limits in the Cloud Console), and the limit is hard (not adjustable). In practice that is about 5 messages per second for `messages.get`, even though the documented cost is 5 units per call, so the real cost per call appears to be higher. A 50,000-message mailbox takes roughly 2-3 hours for the first run. Later runs fetch only new mail.
+- **Throttle messages are normal.** The tool probes the limit and backs off. Retries lose nothing, so frequent "Throttled by Gmail" lines do not mean something is broken. The default budget (75 units/s) is based on the documented cost and will still be throttled sometimes.
+- **Labels in the cache can go stale.** Cached messages are never re-read, so mail you later read or archive keeps its old labels. Use `--refresh-labels` (re-reads cached UNREAD/INBOX messages) or `--fresh` before relying on unread counts.
+- **Counts are by thread, by sender of the first message.** A thread is attributed to whoever started it, so replies from other people do not count toward their totals. Threads you started are excluded entirely.
+- **Sender only, not display names.** Senders are identified by lowercased email address, so one organization using many addresses shows up as many senders. Messages with no parseable From header are grouped as `(unknown)`.
+- **Spam and Trash are excluded.**
+- **Category is approximate.** It comes from Gmail's own category labels, which Gmail can change over time.
+- **Sizes are Gmail's `sizeEstimate`,** not exact byte counts.
+- **Google Cloud setup is required.** You create your own project and OAuth client. The app stays in Testing mode, so Google shows an "unverified app" warning and the login expires every 7 days. This tool is not designed for publishing to other users.
+- **Not tested against a live mailbox in the test suite.** The tests use a fake Gmail service; real-world throttling behavior was tuned by hand.
+- **Python 3.10 works but is past Google's library support;** 3.11 or later is recommended.
+
+## License
+MIT. See `LICENSE`. Provided as is, with no warranty. You are responsible for your own Google Cloud project, credentials and mailbox data.
+
 ## Tests
 ```
 .venv/bin/pip install -r requirements-dev.txt
